@@ -1,0 +1,81 @@
+/* Basic Page Setup */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(
+    to top,
+    #0288d1 60%,
+    #81d4fa 40%
+  ); /* ocean + sky */
+  color: #fff;
+  text-align: center;
+  user-select: none;
+}
+
+/* Header and Title */
+header {
+  margin-top: 10px;
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 5px;
+}
+
+#instructions {
+  font-size: 0.9em;
+  color: #e0f7fa;
+}
+
+/* Game Canvas */
+main {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* Canvas with a light border and drop shadow */
+canvas {
+  background: linear-gradient(
+    to bottom,
+    #4fc3f7 40%,
+    #01579b 100%
+  ); /* water look */
+  border: 3px solid #0277bd;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+}
+
+/* Score / Hud */
+#hud {
+  margin-top: 10px;
+  font-size: 1.1em;
+}
+
+#hud ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#hud li {
+  font-size: 0.9em;
+  color: #ffecb3;
+}
+
+/* Button */
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #1e90ff;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: #005bb5;
+}
