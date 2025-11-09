@@ -281,7 +281,6 @@ function updateFishMovement(time) {
     });
 }
 
-
 function updateSplashes() {
     for (let i = splashes.length - 1; i >= 0; i--) {
         const s = splashes[i];
@@ -291,6 +290,7 @@ function updateSplashes() {
     }
 }
 
+// Timer Handling
 function startTimer() {
     clearInterval(timerInterval);
     timeLeft = 60;
