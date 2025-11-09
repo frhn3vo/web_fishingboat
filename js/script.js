@@ -3,6 +3,13 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const resetBtn = document.getElementById("resetBtn");
 const scoreDisplay = document.getElementById("score");
+const timerDisplay = document.getElementById("timer");
+
+// Timer
+let timeLeft = 60;
+let timerInterval;
+let gamePaused = false;
+let animationFrameId;
 
 // Player (boat)
 const boat = {
@@ -23,7 +30,7 @@ const splashes = []; // will hold active splash effects
 // Score
 let score = 0;
 
-//Environment objects
+// Environment objects
 const sun = { x: 100, y: 80, radius: 40 };
 const clouds = [
     { x: 200, y: 70, speed: 0.3 },
@@ -60,19 +67,25 @@ function spawnFish() {
 const keys = {};
 window.addEventListener("keydown", e => (keys[e.key] = true));
 window.addEventListener("keyup", e => (keys[e.key] = false));
-
+resetBtn.addEventListener("click", resetGame);
 canvas.addEventListener("click", e => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     if (mouseY > 250) {
         //hook = { x: boat.x + boat.width / 2, y: boat.y + boat.height, targetY: mouseY };
-        hook = { x: mouseX, y: mouseY };
+        //hook = { x: mouseX, y: mouseY };
+        hook = {
+            x: boat.x + boat.width / 2,   // fixed horizontal position
+            y: boat.y + boat.height,      // starts below the boat
+            targetY: mouseY,               // only moves vertically
+            retracting: false
+        };
         createSplash(mouseX, mouseY); //splash when hook hits water
     }
 });
 
-//Collision
+// Collision
 function checkCatch(fish, hook) {
     const dx = hook.x - fish.x;
     const dy = hook.y - fish.y;
@@ -169,7 +182,6 @@ function drawHook() {
     ctx.fill();
 }
 
-//Splash Effect
 function createSplash(x, y) {
     splashes.push({
         x,
@@ -201,6 +213,30 @@ function updateBoat() {
     if (keys["ArrowLeft"] && boat.x > 0) boat.x -= boat.speed;
     if (keys["ArrowRight"] && boat.x + boat.width < canvas.width)
         boat.x += boat.speed;
+}
+
+function updateHook() {
+    if (!hook) return;
+
+    // If the hook is moving downward
+    if (!hook.retracting && hook.y < hook.targetY) {
+        hook.y += 5; // speed of descent
+
+        // Stop at target and start retracting after reaching it
+        if (hook.y >= hook.targetY) {
+            hook.retracting = true;
+        }
+    }
+
+    // If the hook is retracting back up
+    if (hook.retracting) {
+        hook.y -= 5; // speed of retraction
+
+        // When the hook reaches the boat, remove it
+        if (hook.y <= boat.y + boat.height) {
+            hook = null; // hook disappears (ready for next click)
+        }
+    }
 }
 
 function updateFishing() {
@@ -245,6 +281,7 @@ function updateFishMovement(time) {
     });
 }
 
+
 function updateSplashes() {
     for (let i = splashes.length - 1; i >= 0; i--) {
         const s = splashes[i];
@@ -252,6 +289,58 @@ function updateSplashes() {
         s.alpha -= 0.03;   // fade out
         if (s.alpha <= 0) splashes.splice(i, 1); // remove finished splash
     }
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 60;
+    timerDisplay.textContent = `Time: ${timeLeft}s`;
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            endGame();
+        }
+    }, 1000);
+}
+
+function endGame() {
+
+    gamePaused = true; // stop game updates
+
+    // Stop timer
+    clearInterval(timerInterval);
+    cancelAnimationFrame(animationFrameId);
+
+    // Stop everything visually
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.font = "40px Arial";
+    ctx.fillText("Time's Up!", canvas.width / 2 - 100, canvas.height / 2 - 20);
+    ctx.font = "24px Arial";
+    ctx.fillText(`Final Score: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 20);
+}
+
+function resetGame() {
+    cancelAnimationFrame(animationFrameId);
+    clearInterval(timerInterval);
+
+    gamePaused = false;
+    score = 0;
+    scoreDisplay.textContent = score;
+
+    fishArray.length = 0;
+    spawnFish();
+
+    hook = null;
+    boat.x = canvas.width / 2 - boat.width / 2;
+
+    startTimer(); // restart timer
+    gameLoop();
 }
 
 //Draw Scane
@@ -280,15 +369,20 @@ function drawScene() {
 
 //Main loop
 function gameLoop(time = 0) {
+    if (gamePaused) return;
+
     updateClouds();
     updateBoat();
+    updateHook();
     updateFishing();
     updateFishMovement(time);
     updateSplashes();
     drawScene();
-    requestAnimationFrame(gameLoop);
+
+    animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 //Start
 spawnFish();
+startTimer();
 gameLoop();
